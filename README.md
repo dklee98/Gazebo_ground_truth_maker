@@ -1,3 +1,5 @@
+**This forked repository is a functionally modified version of the original repository.**
+
 # Voxblox Ground Truth
 Convert Gazebo worlds to the ground truth files:
 * voxblox TSDF maps
