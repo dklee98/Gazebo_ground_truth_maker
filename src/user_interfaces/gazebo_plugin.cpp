@@ -4,6 +4,16 @@
 
 #include "voxblox_ground_truth/sdf_creator.h"
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/common/common.h>
+#include <pcl/common/transforms.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
+
+#include <pcl/conversions.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 namespace gazebo {
 GZ_REGISTER_WORLD_PLUGIN(VoxbloxGroundTruthPlugin)
 
@@ -261,9 +271,41 @@ bool VoxbloxGroundTruthPlugin::serviceCallback(
   }
 
   // Save the TSDF to a file
-  LOG(INFO) << "Saving TSDF to file: " << request.file_path;
-  sdf_creator.getTsdfMap().getTsdfLayer().saveToFile(request.file_path, true);
+  std::string output_filepath = request.file_path;
+  std::string output_type;
+  std::string file_type_separator = ".";
+  
+  output_type = output_filepath.substr(output_filepath.find(file_type_separator) + 1);
 
+  LOG(INFO) << "Saving TSDF to file: " << output_filepath;
+  LOG(INFO) << "File type: " << output_type;
+  LOG(INFO) << "Wait...";
+
+  if (output_type == "tsdf")  {
+    sdf_creator.getTsdfMap().getTsdfLayer().saveToFile(output_filepath, true);
+  }
+  else {
+    pcl::PointCloud<pcl::PointXYZRGB> cloud_from_tsdf;
+    pcl::PointCloud<pcl::PointXYZ> cloud_out;
+    float surface_distance_threshold = sdf_creator.getTsdfMap().getTsdfLayer().voxel_size() * 0.5;
+    createSurfacePointcloudFromTsdfLayer(sdf_creator.getTsdfMap().getTsdfLayer(), surface_distance_threshold, &cloud_from_tsdf);
+
+    for (int i = 0; i < cloud_from_tsdf.size(); ++i) {
+      cloud_out.push_back(pcl::PointXYZ(cloud_from_tsdf[i].x, cloud_from_tsdf[i].y, cloud_from_tsdf[i].z));
+    }
+    
+    if (output_type == "pcd") {
+      pcl::io::savePCDFileASCII<pcl::PointXYZ>(output_filepath, cloud_out);
+    }
+    else if (output_type == "ply") {
+      pcl::io::savePLYFileASCII<pcl::PointXYZ>(output_filepath, cloud_out);
+    }
+    else {
+      LOG(ERROR) << "File type not supported: " << output_type;
+      return false;
+    }
+  }
+  LOG(INFO) << "Done";
   return true;
 }
 }  // namespace gazebo
