@@ -1,10 +1,10 @@
 **This forked repository is a functionally modified version of the original repository.**
 
-# Voxblox Ground Truth
+# Gazebo Ground Truth Maker
 Convert Gazebo worlds to the ground truth files:
-* voxblox TSDF maps
-* pcd files
-* ply files 
+* voxblox TSDF map
+* pcd
+* ply 
 
 ## Install
 Make sure that [voxblox](https://github.com/ethz-asl/voxblox#table-of-contents) and [gazebo](http://gazebosim.org/tutorials?tut=ros_installing) are installed, then run
